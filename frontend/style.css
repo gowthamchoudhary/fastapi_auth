@@ -1,0 +1,9 @@
+*{
+    padding: 0;
+    margin: 0;
+}
+
+.Main-title{
+    display:  flex;
+    color: red;
+}
