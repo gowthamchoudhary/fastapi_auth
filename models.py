@@ -6,6 +6,8 @@ import enum
 class Role(str, enum.Enum):
     user = "user"
     admin = "admin"
+    seller = "seller"
+    manager = "manager"
 
 class User(Base):
     __tablename__ = "users"
@@ -24,6 +26,7 @@ class Product(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True, nullable=False)
     description = Column(String)
-    
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    price = Column(Integer, nullable=False)    
+    quantity=Column(Integer,nullable=False )
+    owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="products")
