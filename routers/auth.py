@@ -20,7 +20,7 @@ def register(name:str,email:str,password:str,db:Session = Depends(get_db)):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    db_user = User(name=name,email=email,password=hash_password(password),role = Role.user)
+   
     token = create_access_token(data={"sub":db_user.id,"role":db_user.role.value})
     return {"access_token":token,"token_type":"Bearer"}
 @router.post("/token",response_model=Token)

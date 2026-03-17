@@ -1,30 +1,12 @@
 from fastapi import APIRouter,Depends,HTTPException
-from sqlalchemy.orm import Session
-from typing import List
-from database import get_db
-from schemas import UserCreate,UserRead,UserUpdateRole
+from database  import get_db
 from models import User,Role
-from dependencies import get_current_user,get_current_admin,require_role
+from schemas import UserCreate,UserRead,UserUpdateRole
+from dependencies import get_current_user,require_role
+from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/users",tags=["users"])
+router = APIRouter(prefix='/admin',tags=['Admin'])
 
-@router.get("/",response_model=List[UserRead])
-def read_users(current_user:User=Depends(get_current_user),db:Session = Depends(get_db)):
-    return db.query(User).all()
-@router.delete("/{user_id}",dependencies=[Depends(get_current_admin)])
-def delete_user(user_id:int,db:Session=Depends(get_db)):
-    user = db.query(User).filter(User.id==user_id).first()
-    if not user:
-        raise HTTPException(404,"User not found")
-    if user.id==1:
-        raise HTTPException(403,"cannot delete main admin")
-    db.delete(user)
-    db.commit()
-    return {"details":"User deleted"}
-@router.get("/get_all_users",response_model=list[UserRead])
-def get_all_users(current_user=Depends(require_role([Role.admin,Role.manager])),db:Session=Depends(get_db)):
-        users = db.query(User).filter(User.role==Role.user).all()
-        return users
 @router.get("/get_all_sellers",response_model=list[UserRead])
 def get_all_sellers(current_user=Depends(require_role([Role.admin,Role.manager])),db:Session=Depends(get_db)):
         users = db.query(User).filter(User.role==Role.seller).all()
@@ -52,7 +34,7 @@ def delete_user(user_id:int,curren_user=Depends(require_role(Role.admin)),db:Ses
       db.commit()
       return {"message":"Deleted the user successfully"}
 @router.patch("/admin/users/seller_rights/{seller_id}",response_model=UserUpdateRole)
-def remove_seller_rights(seller_id:int,db:Session=Depends(get_db),current_user=Depends(get_current_admin([Role.admin,Role.manager]))):
+def remove_seller_rights(seller_id:int,db:Session=Depends(get_db),current_user=Depends(require_role([Role.admin,Role.manager]))):
       seller = db.query(User).filter(User.id==seller_id).first()
       if not seller:
             raise HTTPException(status_code=404,detail="seller not found")
