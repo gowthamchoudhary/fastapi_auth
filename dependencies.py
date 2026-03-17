@@ -6,7 +6,7 @@ from database import get_db
 from passlib.context import CryptContext
 from datetime import datetime,timedelta,timezone
 from jose import JWTError,jwt   
-from models import User,Token,Role
+from models import User,Token,Role,Cart,CartItem
 
 pwd_context = CryptContext(schemes=['bcrypt'],deprecated = "auto")
 load_dotenv()
@@ -49,6 +49,42 @@ def get_current_user(token:Token,db:Session):
         raise HTTPException(status_code=404,detail="User Not FOUND")
     return db_user
 
-def require_role(required_role:str):
-    def role_checker(current_user):
-        if current_user.role.value!=requird
+def require_role(required_role:list):
+    def role_checker(current_user=Depends(get_current_user)):
+        if current_user.role!=required_role:
+            raise HTTPException(status_code=403,detail="You dont have enough permission to take the action")
+        return current_user
+    return role_checker
+
+def add_to_cart(product_id, cart_id, quantity, db: Session):
+    cart_item = db.query(CartItem).filter(
+        CartItem.cart_id == cart_id,
+        CartItem.product_id == product_id
+    ).first()
+
+    if cart_item:
+       
+        cart_item.quantity += quantity
+    else:
+       
+        cart_item = CartItem(
+            cart_id=cart_id,
+            product_id=product_id,
+            quantity=quantity
+        )
+    
+    db.add(cart_item)
+    db.commit()
+    db.refresh(cart_item)
+    return cart_item
+
+
+
+def create_cart(user_id,db:Session):
+    cart = Cart(user_id=user_id)
+    db.add(cart)
+    db.commit()
+    db.refresh(cart)
+    return cart
+
+    
