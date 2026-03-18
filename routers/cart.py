@@ -12,7 +12,7 @@ router = APIRouter(prefix="/cart",tags=["cart"])
 def addtocart(product_id:int,quantity:int,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     current_user_cart=db.query(Cart).filter(Cart.user_id==current_user.id).first()
     if not current_user_cart:
-        cart  = create_cart(current_user.id)
+        current_user_cart  = create_cart(current_user.id)
         
     
     add_to_cart(product_id,current_user_cart.id,quantity,db)

@@ -5,17 +5,18 @@ from database import get_db
 from schemas import UserCreate,Token
 from models import User,Role
 from dependencies import hash_password,authenticate_user,create_access_token
+from schemas import UserCreate,Token
 
 
 router  = APIRouter(prefix="/auth",tags=["auth"])
 
-@router.post("/register",response_model=UserCreate)
-def register(name:str,email:str,password:str,db:Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.email==email).first()
+@router.post("/register",response_model=Token)
+def register(user_data:UserCreate,db:Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email==user_data.email).first()
     if db_user:
         raise HTTPException(status_code=404,detail="email exists already")
-    hashed_password = hash_password(password)
-    db_user = User(name=name,email=email,hash_password=hashed_password,role=Role.user,products=None)
+    hashed_password = hash_password(user_data.password)
+    db_user = User(name=user_data.name,email=user_data.email,hashed_password=hashed_password,role=Role.user,products=None)
       
     db.add(db_user)
     db.commit()
@@ -28,6 +29,6 @@ def login(form_data:OAuth2PasswordRequestForm=Depends(),db:Session=Depends(get_d
     db_user=authenticate_user(form_data.username,form_data.password,db)
     if db_user is None:
         raise HTTPException(status_code=404,detail="User Not Found")
-    token = create_access_token(data={"sub":db_user.id,"password":hash_password(form_data.password),"role":db_user.role.value})
+    token = create_access_token(data={"sub":db_user.id,"role":db_user.role.value})
     return {"access_token":token,"token_type":"Bearer"}
        

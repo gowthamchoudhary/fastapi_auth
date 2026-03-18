@@ -14,7 +14,7 @@ class User(Base):
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)              # usually required
+    name = Column(String, nullable=False)        
     email = Column(String, unique=True, nullable=False, index=True)
     hashed_password = Column(String, nullable=False)
     role = Column(Enum(Role), default=Role.user, nullable=False)
@@ -39,40 +39,14 @@ class Cart(Base):
     created_at = Column(DateTime(timezone=True),server_default=func.now())
     items = relationship("CartItem",back_populates="cart")
 class CartItem(Base):
-    __tablename__ = "cartitem"
+    __tablename__ = "cartitems"
     id = Column(Integer,primary_key=True,index=True)
     cart_id = Column(Integer, ForeignKey("cart.id"))
     product_id = Column(Integer, ForeignKey("products.id"))
     quantity = Column(Integer,nullable=False)
     cart = relationship("Cart",back_populates="items")
     product = relationship("Product")
-# 4️⃣ After Cart → Orders
 
-# Once cart works, users should be able to checkout.
-
-# New tables:
-
-# orders
-# order_items
-# Order table
-# id
-# user_id
-# total_price
-# status
-# created_at
-
-# Status example:
-
-# pending
-# paid
-# shipped
-# delivered
-# OrderItem table
-# id
-# order_    id
-# product_id
-# quantity
-# price
 class Order(Base):
     __tablename__ = "orders"
     id = Column(Integer,primary_key=True,index=True)
@@ -89,3 +63,8 @@ class OrderItem(Base):
     total_price = Column(Numeric(10, 2))
 
 
+class Status(str,enum.Enum):
+    pending = "pending"
+    paid = "paid"
+    shipping="shipping"
+    delivered="delivered"

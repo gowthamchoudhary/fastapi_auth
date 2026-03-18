@@ -15,7 +15,7 @@ class UserRead(BaseModel):
 
 class ProductCreate(BaseModel):
     name:str
-    price:str
+    price:int
     quantity:int
     description:Optional[str]=None
 class ProductRead(BaseModel):
@@ -31,13 +31,13 @@ class Token(BaseModel):
     token_type:str
 class ProductUpdate(BaseModel):
     name:Optional[str]
-    price:Optional[str]
-    quantity:Optional[str]
+    price:Optional[int]
+    quantity:Optional[int]
     description:Optional[str]
 
 class UserUpdateRole(BaseModel):
     name:Optional[str]
-    role:Optional[str]
+    role:Optional[str] 
    
 class AddToCart(BaseModel):
     productId:int
@@ -56,4 +56,9 @@ class ViewCart(BaseModel):
     total_items: int
     total_price: float
     message: Optional[str] = None
+class ViewOrder(BaseModel):
+    order_id:int
+    status:str
+    total_price: float
+    items: List[dict] = []
 

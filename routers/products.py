@@ -1,4 +1,5 @@
 from fastapi import APIRouter,Depends,HTTPException
+from typing import List
 from models import Product,Role
 from schemas import ProductCreate,ProductRead,ProductUpdate
 from dependencies import get_current_user,require_role
@@ -26,7 +27,7 @@ def register_seller(db:Session=Depends(get_db),current_user=Depends(get_current_
     current_user.role = Role.seller
     db.commit()
     return current_user
-@router.get("/products",response_model=list[ProductRead])
+@router.get("/products",response_model=List[ProductRead])
 def get_all_products(db:Session=Depends(get_db)):
     products = db.query(Product).all()
     return products
