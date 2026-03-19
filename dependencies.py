@@ -15,12 +15,16 @@ load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY')
 ALGORITHM = os.getenv('ALGORITHM')
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 30))
-def hash_password(plain:str):
-    return pwd_context.hash(plain)
-def verify_password(plain:str,hashed_password):
-    if not pwd_context.verify(plain,hashed_password):
-        return False
-    return True
+import hashlib
+
+def hash_password(password: str):
+    password = hashlib.sha256(password.encode()).hexdigest()
+    return pwd_context.hash(password)
+import hashlib
+
+def verify_password(plain_password, hashed_password):
+    plain_password = hashlib.sha256(plain_password.encode()).hexdigest()
+    return pwd_context.verify(plain_password, hashed_password)
 def create_access_token(data:dict):
     try:
         to_encode = data.copy()
@@ -32,27 +36,34 @@ def create_access_token(data:dict):
 def authenticate_user(email:str,password:str,db:Session):
     db_user = db.query(User).filter(User.email==email).first()
     if not db_user or not verify_password(password,db_user.hashed_password):
-        return HTTPException(status_code=404,detail="Invalid credentials")
+        return None
     return db_user
-
 def verify_token(token):
     try:
-        payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except JWTError:
-        raise HTTPException(status_code=404,detail="Invalid Token")
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
    
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     payload = verify_token(token)
     user_id = payload.get("sub")
+
     if not user_id:
-        raise HTTPException(status_code=401,detail="Could not validate credentials", headers={"WWW-Authenticate": "Bearer"})
-    db_user = db.query(User).filter(User.id==user_id).first()
-    if not db_user:
-        raise HTTPException(status_code=401,detail="User Not FOUND")
-    return db_user
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return user
 
 def require_role(required_roles: list):
     def role_checker(current_user=Depends(get_current_user)):
